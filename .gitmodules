@@ -1,0 +1,4 @@
+[submodule "igpy"]
+	path = igpy
+	url = git@github.com:igamenovoer/igpy.git
+	branch = main
