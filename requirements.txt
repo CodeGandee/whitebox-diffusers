@@ -1,0 +1,10 @@
+omegaconf
+scipy
+diffusers
+transformers
+click
+pandas
+matplotlib
+networkx
+opencv-contrib-python
+ipykernel
