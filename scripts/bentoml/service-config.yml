@@ -1,0 +1,6 @@
+version: 1
+api_server:
+  http:
+    port: 13579
+  traffic:
+    max_concurrency: 3
