@@ -67,9 +67,9 @@ class LoraAdapterHelper:
             
         # install adapters
         if sd_version == C.SDVersion.v15:
-            from diffusers.loaders.lora import LoraLoaderMixin as lora_loader
+            from diffusers.loaders import LoraLoaderMixin as lora_loader
         elif sd_version == C.SDVersion.sdxl:
-            from diffusers.loaders.lora import StableDiffusionXLLoraLoaderMixin as lora_loader
+            from diffusers.loaders import StableDiffusionXLLoraLoaderMixin as lora_loader
             
         _unet = self.m_unet.get_internal_model()
         for name, adapter in self.m_adapters.items():

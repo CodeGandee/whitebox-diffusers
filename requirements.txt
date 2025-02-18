@@ -1,5 +1,4 @@
 omegaconf
-scipy
 diffusers
 transformers
 click
@@ -8,3 +7,9 @@ matplotlib
 networkx
 opencv-contrib-python
 ipykernel
+rich
+attrs
+tqdm
+peft
+docarray
+einops

@@ -14,7 +14,7 @@ from diffusers.schedulers import (
 from typing_extensions import Self
 
 from pyaigc.GlobalConfig import SchedulerTypes as SchedulerTypeNames
-from ismember import ismember
+from igpy.common.ismember import ismember
 
 SupportedSchedulerType = DPMSolverMultistepScheduler | UniPCMultistepScheduler | EulerDiscreteScheduler
 
