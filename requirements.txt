@@ -13,3 +13,4 @@ tqdm
 peft
 docarray
 einops
+imageio

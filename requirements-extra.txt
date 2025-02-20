@@ -1,0 +1,3 @@
+controlnet-aux
+# easy-dwpose
+onnxruntime-gpu
