@@ -177,7 +177,7 @@ class LocalModelLoader:
         
         # load controlnets
         if mc.controlnets is not None:
-            for cnet_config in (mc.controlnets.canny, mc.controlnets.depth):
+            for cnet_config in (mc.controlnets.canny, mc.controlnets.depth, mc.controlnets.openpose):
                 if cnet_config is None or cnet_config.path is None:
                     continue
                 

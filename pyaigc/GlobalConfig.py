@@ -142,8 +142,10 @@ MaxTimestep_sd_v15 = 1000 - 1
 class ControlNetModelKeys(CustomEnumBase):
     Depth_sd_v15 = "ControlNet_Depth_sd_v15"
     Canny_sd_v15 = "ControlNet_Canny_sd_v15"
+    OpenPose_sd_v15 = "ControlNet_OpenPose_sd_v15"
     Depth_sdxl = "ControlNet_Depth_sdxl"
     Canny_sdxl = "ControlNet_Canny_sdxl"
+    OpenPose_sdxl = "ControlNet_OpenPose_sdxl"
     
     # for custom models
     CustomControlNet_1 = "CustomControlNet_1"
@@ -227,18 +229,23 @@ class TextModelComponent(ModelComponent):
 class ControlnetModelConfig:
     canny : ModelComponent | None = field(default=None)
     depth : ModelComponent | None = field(default=None)
-    
+    openpose : ModelComponent | None = field(default=None)
+
     def set_torch_dtype(self, torch_dtype : torch.dtype):
         if self.canny is not None:
             self.canny.torch_dtype = torch_dtype
         if self.depth is not None:
             self.depth.torch_dtype = torch_dtype
+        if self.openpose is not None:
+            self.openpose.torch_dtype = torch_dtype
             
     def set_torch_device(self, torch_device : torch.device | str):
         if self.canny is not None:
             self.canny.torch_device = torch_device
         if self.depth is not None:
             self.depth.torch_device = torch_device
+        if self.openpose is not None:
+            self.openpose.torch_device = torch_device
             
 @define(kw_only=True)
 class IPAdapterModelConfig:
@@ -392,8 +399,10 @@ class ModelConfigs:
             
             ControlNetModelKeys.Canny_sd_v15 : f'{basedir}/sd15/controlnet/sd-controlnet-canny',
             ControlNetModelKeys.Depth_sd_v15 : f'{basedir}/sd15/controlnet/sd-controlnet-depth',
+            ControlNetModelKeys.OpenPose_sd_v15 : f'{basedir}/sd15/controlnet/openpose',
             ControlNetModelKeys.Canny_sdxl : f'{basedir}/sdxl/controlnet/canny',
             ControlNetModelKeys.Depth_sdxl : f'{basedir}/sdxl/controlnet/depth',
+            ControlNetModelKeys.OpenPose_sdxl : f'{basedir}/sdxl/controlnet/openpose',
             
             IPAdapterEncoderKeys.sd_v15 : f'{basedir}/sd15/ip-adapter/ip_adapter_sd_image_encoder',
             IPAdapterEncoderKeys.sdxl : f'{basedir}/sdxl/ip-adapter/ip_adapter_sdxl_image_encoder',
@@ -505,7 +514,8 @@ class ModelConfigs:
                 image_processor=ModelComponent(key=SharedModel + '.' + ImageProcessorKeys.CLIP_ImageProcessor),
                 controlnets = ControlnetModelConfig(
                     canny = ModelComponent(key=ControlNetModelKeys.Canny_sd_v15),
-                    depth = ModelComponent(key=ControlNetModelKeys.Depth_sd_v15)
+                    depth = ModelComponent(key=ControlNetModelKeys.Depth_sd_v15),
+                    openpose = ModelComponent(key=ControlNetModelKeys.OpenPose_sd_v15)
                 ),
                 ip_adapter=IPAdapterModelConfig(
                     encoder=ModelComponent(key=IPAdapterEncoderKeys.sd_v15),
@@ -538,7 +548,8 @@ class ModelConfigs:
                                               scheduler_type=self.DefaultSchedulerType_sdxl),
                 controlnets= ControlnetModelConfig(
                     canny= ModelComponent(key=ControlNetModelKeys.Canny_sdxl),
-                    depth= ModelComponent(key=ControlNetModelKeys.Depth_sdxl)
+                    depth= ModelComponent(key=ControlNetModelKeys.Depth_sdxl),
+                    openpose= ModelComponent(key=ControlNetModelKeys.OpenPose_sdxl)
                 ),
                 ip_adapter=IPAdapterModelConfig(
                     encoder=ModelComponent(key=IPAdapterEncoderKeys.sdxl),
@@ -577,6 +588,10 @@ class ModelConfigs:
                 path = self.get_base_model_paths().get(mdconfig.controlnets.depth.key)
                 if os.path.isdir(path):
                     mdconfig.controlnets.depth.path = path
+            if mdconfig.controlnets.openpose is not None:
+                path = self.get_base_model_paths().get(mdconfig.controlnets.openpose.key)
+                if os.path.isdir(path):
+                    mdconfig.controlnets.openpose.path = path
                     
         if mdconfig.ip_adapter is not None:
             if mdconfig.ip_adapter.encoder is not None:

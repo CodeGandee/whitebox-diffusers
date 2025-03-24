@@ -32,12 +32,13 @@ class InputCase:
     num_denoise_step : int = 10
     canny_weight : float = 0.0
     depth_weight : float = 0.0
+    openpose_weight : float = 0.0
     batch_size : int = 1
     
     image : np.ndarray | None = field(default=None)    # image data
     canny_image : np.ndarray | None = field(default=None)  # uint8 canny image
     depth_image : np.ndarray | None = field(default=None)   # uint8 depth image
-    
+    openpose_image : np.ndarray | None = field(default=None)   # uint8 openpose image
     random_generator : torch.Generator | None = field(default=None)
     
     # ip adapter images
@@ -66,7 +67,8 @@ class InputCase:
             return self.canny_image.shape[1]
         elif self.depth_image is not None:
             return self.depth_image.shape[1]
-        
+        elif self.openpose_image is not None:   
+            return self.openpose_image.shape[1]
     @property
     def height(self) -> int:
         if self.image is not None:
@@ -75,7 +77,10 @@ class InputCase:
             return self.canny_image.shape[0]
         elif self.depth_image is not None:
             return self.depth_image.shape[0]
+        elif self.openpose_image is not None:
+            return self.openpose_image.shape[0]
     
+
     def crop_by(self, xmin : int, ymin : int, w : int, h : int):
         ''' crop the image and masks by the given bbox
         '''
@@ -87,6 +92,9 @@ class InputCase:
             
         if self.depth_image is not None:
             self.depth_image = self.depth_image[ymin:ymin+h, xmin:xmin+w, ...]
+            
+        if self.openpose_image is not None:
+            self.openpose_image = self.openpose_image[ymin:ymin+h, xmin:xmin+w, ...]
             
     def resize_to(self, h : int, w : int, divisible_by : int = None):
         ''' resize the image and masks to the given size
@@ -105,6 +113,9 @@ class InputCase:
             
         if self.depth_image is not None:
             self.depth_image = ip.imresize(self.depth_image, (h,w), interp_method='nearest')
+            
+        if self.openpose_image is not None:
+            self.openpose_image = ip.imresize(self.openpose_image, (h,w), interp_method='nearest')
             
     def resize_by_long_edge(self, long_edge_length : int, divisible_by : int = None):
         ''' resize the image and masks so that the longer edge matches the given length
@@ -129,6 +140,7 @@ class PipelineConfig:
     sd_model_key : str = field()
     with_canny_control : bool = field(default=False)
     with_depth_control : bool = field(default=False)
+    with_openpose_control : bool = field(default=False)
     with_vae_upcast : bool = field(default=True)
     with_ip_image_encoder : bool = field(default=False)
     
@@ -159,6 +171,8 @@ class SDTester:
             model_config.controlnets.canny = None
         if not config.with_depth_control:
             model_config.controlnets.depth = None
+        if not config.with_openpose_control:
+            model_config.controlnets.openpose = None
         if not config.with_ip_image_encoder:
             model_config.ip_adapter.encoder = None
             
@@ -178,7 +192,9 @@ class SDTester:
         obj.m_text_model = model_bundle.text_model
         obj.m_unet = model_bundle.unet
         
-        for info, name in [(model_config.controlnets.canny, 'canny'), (model_config.controlnets.depth, 'depth')]:
+        for info, name in [(model_config.controlnets.canny, 'canny'), 
+                           (model_config.controlnets.depth, 'depth'),
+                           (model_config.controlnets.openpose, 'openpose')]:
             if info is not None:
                 cnet_model = model_bundle.controlnets.get(info.key)
                 assert cnet_model is not None, f'control net {info.key} not loaded'
