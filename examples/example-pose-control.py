@@ -1,17 +1,19 @@
 import os
+
+# download models if needed
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-os.environ['HF_HOME']=r'D:\code\whitebox-diffusers\data\models\hf-models'
 os.environ['HF_HUB_OFFLINE'] = '0'
 
 import torch
 import numpy as np
 from rich import print as pprint
 import pyaigc.GlobalConfig as C
-from controlnet_aux import OpenposeDetector
+from controlnet_aux import OpenposeDetector, ZoeDetector
 C.Logme.get_instance().set_level(C.Logme.Levels.DEBUG)
 
 from test.sdxl_tester import SDXLTester, InputCase, OutputCase, SDTester, PipelineConfig
 import igpy.myplot.jupyter_plot as jpt
+import igpy.common.image_processing as ip
 
 # setup input files
 input_cases = [
@@ -61,9 +63,15 @@ print('--- model components ---')
 pprint(model_info)
 print('------------------------')
 
-openpose = OpenposeDetector.from_pretrained('lllyasviel/ControlNet')
-
-assert False
+if False:
+    # if you want to use offline model, download annotators, you need the body_pose_model.pth
+    # https://hf-mirror.com/lllyasviel/Annotators/tree/main
+    dir_annotators = r'data/models/Annotators'
+    openpose = OpenposeDetector.from_pretrained(dir_annotators)
+else:
+    # use online model
+    openpose = OpenposeDetector.from_pretrained('lllyasviel/Annotators')
+# zoedepth = ZoeDetector.from_pretrained(dir_annotators)
 
 # load model, create pipeline
 if USE_SDXL:
@@ -78,20 +86,27 @@ pc = PipelineConfig(
 sdtest.load_model_pipeline(pc)
 
 # img-to-img noise sequence
-noise_endpoints = np.logspace(np.log10(600), np.log10(900), num=5, dtype=int)
+noise_endpoints = np.logspace(np.log10(600), np.log10(900), num=3, dtype=int)
 
 # pick a case
 ic = input_cases[0]
 ic.batch_size = 2
 # ic.canny_weight = 0.3
-ic.openpose_weight = 0.3
-ic.num_denoise_step = 10
+ic.openpose_weight = 1.0
+ic.num_denoise_step = 20
 ic.positive_prompt = "attractive young girl"
 ic.negative_prompt = "toy, blur, naked"
 long_edge_length = 640
 
 # init
 sdtest.init_input_case(ic)
+
+# get openpose image
+img = ic.image
+openpose_image = np.array(openpose(img))
+openpose_image = ip.imresize(openpose_image, (img.shape[1], img.shape[0]))
+ic.openpose_image = openpose_image
+
 ic.resize_by_long_edge(long_edge_length, divisible_by=8)
 oc = sdtest.init_output_case(ic)
 
@@ -101,21 +116,7 @@ oc = sdtest.init_output_case(ic)
 sdtest.denoise_dstate([oc.dstate])
 img_batch = sdtest.model_pipeline.decode_latent_to_image(oc.dstate.latent, output_dtype=torch.uint8)
 
-# get the image
-imglist = [img_batch]
-    
-# add noise to dstate and denoise again
-import copy
-for noise_pt in noise_endpoints:
-    _dstate = copy.deepcopy(oc.dstate)
-    sdtest.add_noise_to_dstate(_dstate, to_timestep_index=noise_pt)
-    sdtest.denoise_dstate([_dstate])
-    img_batch = sdtest.model_pipeline.decode_latent_to_image(_dstate.latent, output_dtype=torch.uint8)
-    imglist.append(img_batch)
-    
-# show images
-print(noise_endpoints)
 for idx_batch in range(ic.batch_size):
-    imgs = [imglist[idx][idx_batch] for idx in range(len(imglist))]
-    imgshow = np.column_stack(imgs)
+    imgshow = img_batch[idx_batch]
+    imgshow = np.concatenate([ic.image, ic.openpose_image, imgshow], axis=1)
     jpt.imshow(imgshow)

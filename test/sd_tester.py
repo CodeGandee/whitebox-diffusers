@@ -354,6 +354,14 @@ class SDTester:
                 weight=input_case.canny_weight
             )
             
+        if input_case.openpose_weight > 0 and input_case.openpose_image is not None:
+            # openpose image is 3 channel uint8 image
+            dstate.controlnet_data['openpose'] = ControlnetData(
+                image_data=input_case.openpose_image[None,...],
+                image_data_layout='nhwc',
+                weight=input_case.openpose_weight
+            )
+            
         # fill others
         dstate.rng = input_case.random_generator
         
