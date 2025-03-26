@@ -18,6 +18,7 @@ import igpy.common.image_processing as ip
 # setup input files
 input_cases = [
     InputCase(fn_image=r'sample-data/a1ee6e05-ee42-4883-96c0-21f1d86a5ce4.png', positive_prompt='woman portrait'),
+    InputCase(fn_image=r'sample-data/69a344c8-7765-4d44-b6c3-4be9576da8a5.png', positive_prompt='woman dance'),
 ]
 
 # use your own model?
@@ -89,34 +90,34 @@ sdtest.load_model_pipeline(pc)
 noise_endpoints = np.logspace(np.log10(600), np.log10(900), num=3, dtype=int)
 
 # pick a case
-ic = input_cases[0]
-ic.batch_size = 2
-# ic.canny_weight = 0.3
-ic.openpose_weight = 1.0
-ic.num_denoise_step = 20
-ic.positive_prompt = "attractive young girl"
-ic.negative_prompt = "toy, blur, naked"
-long_edge_length = 640
+for ith_case, ic in enumerate(input_cases):
+    ic.batch_size = 2
+    # ic.canny_weight = 0.3
+    ic.openpose_weight = 0.8
+    ic.num_denoise_step = 20
+    ic.positive_prompt = "attractive young girl"
+    ic.negative_prompt = "toy, blur, naked"
+    long_edge_length = 640
 
-# init
-sdtest.init_input_case(ic)
+    # init
+    sdtest.init_input_case(ic)
 
-# get openpose image
-img = ic.image
-openpose_image = np.array(openpose(img))
-openpose_image = ip.imresize(openpose_image, (img.shape[1], img.shape[0]))
-ic.openpose_image = openpose_image
+    # get openpose image
+    img = ic.image
+    openpose_image = np.array(openpose(img))
+    openpose_image = ip.imresize(openpose_image, (img.shape[1], img.shape[0]))
+    ic.openpose_image = openpose_image
 
-ic.resize_by_long_edge(long_edge_length, divisible_by=8)
-oc = sdtest.init_output_case(ic)
+    ic.resize_by_long_edge(long_edge_length, divisible_by=8)
+    oc = sdtest.init_output_case(ic)
 
-# assert False
+    # assert False
 
-# denoise to the end
-sdtest.denoise_dstate([oc.dstate])
-img_batch = sdtest.model_pipeline.decode_latent_to_image(oc.dstate.latent, output_dtype=torch.uint8)
+    # denoise to the end
+    sdtest.denoise_dstate([oc.dstate])
+    img_batch = sdtest.model_pipeline.decode_latent_to_image(oc.dstate.latent, output_dtype=torch.uint8)
 
-for idx_batch in range(ic.batch_size):
-    imgshow = img_batch[idx_batch]
-    imgshow = np.concatenate([ic.image, ic.openpose_image, imgshow], axis=1)
-    jpt.imshow(imgshow)
+    for idx_batch in range(ic.batch_size):
+        imgshow = img_batch[idx_batch]
+        imgshow = np.concatenate([ic.image, ic.openpose_image, imgshow], axis=1)
+        jpt.imshow(imgshow)
