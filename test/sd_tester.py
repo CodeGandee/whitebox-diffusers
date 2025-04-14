@@ -362,6 +362,17 @@ class SDTester:
                 weight=input_case.openpose_weight
             )
             
+        if input_case.depth_weight > 0 and input_case.depth_image is not None:
+            depth_image = input_case.depth_image
+            # depth image is always single channel, if not, convert to single channel
+            if depth_image.ndim >= 3 and depth_image.shape[2] > 1:
+                depth_image = depth_image[..., 0]
+            dstate.controlnet_data['depth'] = ControlnetData(
+                image_data=depth_image[None,...],
+                image_data_layout='nhwc',
+                weight=input_case.depth_weight
+            )
+            
         # fill others
         dstate.rng = input_case.random_generator
         
