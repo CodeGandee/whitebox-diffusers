@@ -419,6 +419,11 @@ class StableDiffusionWithControl:
             output dtype, if None, then use the same dtype as latent.
             For float image, the range is within (0,1).
             For uint8 image, the range is within (0,255).
+            
+        return
+        --------
+        image : np.ndarray
+            decoded image, NHWC format
         '''
         if force_upcast is None:
             force_upcast = self.m_vae.config.get('force_upcast')

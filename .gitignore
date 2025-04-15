@@ -173,3 +173,6 @@ data/
 .vscode/
 build*/
 tmp/
+
+# dwpose will download the model files to the checkpoints folder
+checkpoints/
